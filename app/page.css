@@ -106,6 +106,9 @@ body { font-variant-numeric: normal; }
 .problem__head { font-size: clamp(56px, 7.7vw, 112px); line-height: .98; letter-spacing: -.04em; }
 .problem__row { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: 64px; align-items: end; margin-top: 64px; }
 .problem__big { font: 750 clamp(30px, 3.4vw, 48px)/1.1 var(--display); letter-spacing: -.03em; }
+.problem.has-photo .problem__rest { color: var(--on-night); }
+.who__a { position: relative; isolation: isolate; overflow: hidden; }
+.who__tint { z-index: -1; object-fit: cover; mix-blend-mode: multiply; opacity: .26; }
 .problem__rest { color: var(--ink-2); font-size: 19px; line-height: 1.5; max-width: 48ch; }
 .nb { white-space: nowrap; }
 .cellmark { display: inline-block; position: relative; width: 72px; height: 28px; margin-left: 8px; vertical-align: -.04em; border: 2px solid var(--ink); border-radius: 2px; background-color: var(--paper-3); }
@@ -209,8 +212,6 @@ body { font-variant-numeric: normal; }
 /* The narrowest phones: keep the shared header on one line */
 @media (width < 360px) {
   .ph-bar { gap: 8px; }
-  .ph-brand { font-size: 15px; }
-  .ph-nav .ph-btn { padding: 0 10px; font-size: 14px; white-space: nowrap; }
 }
 
 /* Browsers without round(): cells may land on fractions of a pixel, and the canvas follows them. */

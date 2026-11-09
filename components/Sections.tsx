@@ -1,8 +1,13 @@
+import Image from 'next/image';
+import screens from '@/assets/photos/screens.jpg';
+import dashboard from '@/assets/photos/dashboard.jpg';
+import oncall from '@/assets/photos/oncall.jpg';
 import { SAMPLE_SERVICES, SAMPLE_TARGET, uptimeBudget } from '@/lib/logic';
 
 export function Problem() {
   return (
-    <section className="problem below">
+    <section className="problem below has-photo">
+      <Image className="ph-bg" src={screens} alt="" fill sizes="100vw" placeholder="blur" />
       <div className="wrap">
         <h2 className="problem__head" data-in>A contract says 99.9% uptime and everyone nods</h2>
         <div className="problem__row">
@@ -58,10 +63,12 @@ export function Who() {
   return (
     <section className="who below" aria-label="Who it is for">
       <article className="who__a" data-in>
+        <Image className="who__tint" src={dashboard} alt="" fill sizes="(max-width: 900px) 100vw, 60vw" placeholder="blur" />
         <h2>Founders signing an SLA</h2>
         <p>Check what a promised uptime really allows before it goes into a contract.</p>
       </article>
-      <article className="who__b" data-in style={{ '--i': 1 }}>
+      <article className="who__b has-photo" data-in style={{ '--i': 1 }}>
+        <Image className="ph-bg" src={oncall} alt="" fill sizes="(max-width: 900px) 100vw, 45vw" placeholder="blur" />
         <span className="who__wire" aria-hidden="true"><i /><i /><i /></span>
         <h2>Engineers planning on-call</h2>
         <p>See how much downtime a month leaves once every dependency is counted.</p>
