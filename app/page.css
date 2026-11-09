@@ -1,0 +1,230 @@
+/* Uptime Budget Calculator: a month, drawn to scale. Night shift, honey as the only light. */
+:root { --ground: var(--night); --text: var(--on-night); --text-2: var(--on-night-2); --wire: var(--on-night-3); --edge: max(var(--gutter), calc((100vw - var(--wrap)) / 2)); }
+/* Schibsted's tabular figures widen commas and periods, so prose goes proportional and figures opt back in. */
+body { font-variant-numeric: normal; }
+
+.ph-bar { color: var(--on-night); }
+
+/* ---------- The tool: first screen */
+.tool { padding-block: 4px 56px; }
+.tool__name { color: var(--on-night-2); font-size: 16px; line-height: 24px; }
+
+/* The headline is the result */
+.say { margin-top: 4px; font-size: clamp(44px, 6.4vw, 92px); line-height: 1.04; letter-spacing: -.035em; text-wrap: initial; font-variant-numeric: tabular-nums; }
+.say__line { display: block; position: relative; }
+/* The input and a hidden copy of its text share one grid cell, so the field is exactly as wide as what is typed, with no JS. */
+.say__field { display: inline-grid; }
+.say__fit { grid-area: 1 / 1; visibility: hidden; white-space: pre; padding-right: 2px; pointer-events: none; }
+.say__input { grid-area: 1 / 1; width: 0; min-width: 100%; height: 1.06em; padding: 0; margin: 0; border: 0; border-radius: 0; border-bottom: .07em solid var(--honey); background: none; color: var(--on-night); font: inherit; line-height: 1.06; letter-spacing: inherit; font-variant-numeric: inherit; caret-color: var(--honey); }
+.say__input::placeholder { color: var(--on-night-3); opacity: 1; }
+.say__input:focus-visible { outline: 2px solid var(--honey); outline-offset: 6px; border-radius: 6px; }
+.say__input[aria-invalid="true"] { border-bottom-color: var(--ember); }
+.say__out { color: var(--honey); }
+.say.is-void .say__out { color: var(--on-night-3); }
+.say.is-void .say__rest { display: none; }
+
+/* Presets, hint and error share one quiet row */
+.targets { display: flex; flex-wrap: wrap; align-items: center; column-gap: 40px; row-gap: 4px; margin-top: 8px; }
+.presets { display: flex; align-items: center; gap: 16px; border: 0; padding: 0; margin: 0; min-width: 0; }
+.presets__legend { float: left; color: var(--on-night-3); font-size: 16px; padding: 0; }
+.presets__row { display: flex; gap: 4px; }
+.preset { position: relative; min-height: 44px; padding: 0 8px; border: 0; background: none; color: var(--on-night-2); font-size: 16px; font-weight: 500; cursor: pointer; transition: color .16s var(--ease); }
+.preset::after { content: ''; position: absolute; left: 8px; right: 8px; bottom: 8px; height: 2px; background: var(--honey); opacity: 0; transition: opacity .16s var(--ease); }
+.preset:hover { color: var(--on-night); }
+.preset[aria-pressed="true"] { color: var(--on-night); }
+.preset[aria-pressed="true"]::after { opacity: 1; }
+.targets__hint { margin-left: auto; color: var(--on-night-3); font-size: 16px; }
+.targets__error { color: var(--ember); font-size: 16px; font-weight: 500; }
+
+/* The band: the month on the left, the chain on the right */
+.band { display: grid; grid-template-columns: minmax(0, 1fr) 416px; column-gap: 48px; margin-top: 16px; align-items: start; }
+
+.month__cap { color: var(--on-night-2); font-size: 16px; line-height: 24px; margin-bottom: 8px; }
+
+/* Whole-pixel cells worked out in CSS, so the grid is its final size before any JS runs. 100cqw is the plot minus its gutter. */
+.plot { --gut: 40px; --ch: 12px; --g: 2px; --cw: max(4px, round(down, (100cqw + var(--g)) / 24, 1px) - var(--g)); --gw: calc(24 * var(--cw) + 23 * var(--g)); --gh: calc(30 * var(--ch) + 29 * var(--g)); container-type: inline-size; position: relative; padding-left: var(--gut); }
+.plot__hours { position: relative; height: 20px; margin-bottom: 4px; }
+.plot__hours span { position: absolute; left: calc(var(--c) * (var(--cw) + var(--g))); bottom: 0; font: 400 14px/20px var(--mono); color: var(--on-night-3); }
+.plot__days { position: absolute; left: 0; top: 24px; width: calc(var(--gut) - 8px); height: 0; }
+.plot__days span { position: absolute; right: 0; top: calc(var(--r) * (var(--ch) + var(--g))); font: 400 14px/1 var(--mono); height: 14px; color: var(--on-night-3); transform: translateY(-1px); }
+
+/* The unlit cells, one tile per cell plus its gap. The canvas on top only paints lit cells. */
+.cells { position: relative; width: var(--gw); height: var(--gh); background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Crect style='width:calc(100%25 - 2px);height:calc(100%25 - 2px)' rx='2' fill='%23211f1b'/%3E%3C/svg%3E") 0 0 / calc(var(--cw) + var(--g)) calc(var(--ch) + var(--g)); }
+.cells canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+
+/* The leader: always comes out of the last cell of the month, downward */
+.lead { --x: round(var(--gw) - min(var(--cw), max(var(--hf) * var(--cw), 2px)) / 2 - 1px, 1px); position: relative; width: var(--gw); min-height: 32px; padding-top: 12px; }
+.lead__line { position: absolute; left: 0; top: -2px; width: 1px; height: 14px; background-color: var(--honey); transform: translateX(var(--x)); transition: transform .18s var(--ease); }
+.lead__label { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0 16px; font-size: 15px; line-height: 20px; font-weight: 500; text-align: right; }
+.lead__allow { color: var(--honey); }
+.lead__over { color: var(--ember); }
+.lead.is-off .lead__line { opacity: 0; }
+
+/* The chain: one continuous wire */
+.chain { border: 0; padding: 0; margin: 0; min-width: 0; --wire-x: 11px; }
+.chain__legend { padding: 0; font: 700 20px/28px var(--display); letter-spacing: -.01em; color: var(--on-night); }
+.chain__hint { color: var(--on-night-2); font-size: 16px; line-height: 22px; margin-top: 4px; }
+.chain__wire { margin-top: 8px; }
+
+.row { position: relative; display: grid; grid-template-columns: 24px minmax(0, 1fr) 92px; column-gap: 12px; align-items: center; min-height: 44px; }
+.row::before { content: ''; position: absolute; left: var(--wire-x); top: 0; bottom: 0; width: 2px; background-color: var(--wire); }
+.row.is-empty::before { background-color: transparent; background-image: repeating-linear-gradient(to bottom, var(--on-night-3) 0 4px, transparent 4px 9px); }
+.row__node { position: relative; z-index: 1; grid-column: 1; justify-self: center; width: 12px; height: 12px; border-radius: 2px; border: 2px solid var(--wire); background-color: var(--night); transition: background-color .16s var(--ease), border-color .16s var(--ease); }
+.row.is-on .row__node { background-color: var(--on-night-2); border-color: var(--on-night-2); }
+.row.is-bad .row__node { background-color: var(--ember); border-color: var(--ember); }
+
+.row__name, .row__pct { min-height: 40px; padding: 0; border: 0; border-bottom: 1px solid var(--on-night-3); border-radius: 0; background: none; color: var(--on-night); font-size: 17px; width: 100%; }
+.row__name::placeholder, .row__pct::placeholder { color: var(--on-night-3); opacity: 1; }
+.row__name:focus-visible, .row__pct:focus-visible { outline: 2px solid var(--honey); outline-offset: 2px; border-radius: 2px; border-bottom-color: transparent; }
+.row__val { position: relative; display: block; }
+.row__pct { padding-right: 16px; text-align: right; font-family: var(--mono); font-size: 16px; }
+.row__unit { position: absolute; right: 0; top: 50%; transform: translateY(-50%); font: 400 16px/1 var(--mono); color: var(--on-night-2); pointer-events: none; }
+.row__pct:placeholder-shown + .row__unit { visibility: hidden; }
+.row.is-bad .row__pct { border-bottom-color: var(--ember); }
+
+.sum { position: relative; display: grid; grid-template-columns: 24px minmax(0, 1fr); column-gap: 12px; padding-top: 12px; }
+.sum::before { content: ''; position: absolute; left: var(--wire-x); top: 0; height: 22px; width: 2px; background-color: var(--wire); }
+.sum__term { position: relative; z-index: 1; display: block; justify-self: center; width: 20px; height: 20px; margin-top: 4px; border-radius: 3px; background-color: var(--night-3); transition: background-color .18s var(--ease); }
+.sum.is-ok .sum__term { background-color: var(--honey); }
+.sum.is-short .sum__term { background-color: var(--ember); }
+.sum__label { color: var(--on-night-2); font-size: 15px; line-height: 20px; }
+.sum__fig { margin-top: 4px; }
+.sum__chain { font: 750 36px/1.1 var(--display); letter-spacing: -.03em; }
+.sum__down { display: block; color: var(--on-night-2); font-size: 15px; line-height: 20px; }
+.sum__verdict { margin-top: 4px; color: var(--on-night); font-size: 16px; line-height: 22px; min-height: 66px; }
+.sum__error { margin-top: 4px; color: var(--ember); font-size: 16px; line-height: 22px; font-weight: 500; }
+
+/* The figures: a quiet table, right-aligned */
+.figs { width: 100%; margin-top: 24px; border-collapse: collapse; }
+.figs tbody { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: 48px; border-top: 1px solid var(--hair); padding-top: 12px; }
+.figs tr { display: flex; flex-direction: column; align-items: flex-end; gap: 0; }
+.figs th { font-weight: 400; color: var(--on-night-3); font-size: 15px; line-height: 20px; text-align: right; padding: 0; }
+.figs td { padding: 0; font: 400 20px/28px var(--mono); font-variant-numeric: tabular-nums; color: var(--on-night); text-align: right; }
+
+/* ---------- The problem: a whole field of paper */
+.problem { background-color: var(--paper); color: var(--ink); padding-block: 120px; --focus: var(--ink); }
+.problem__head { font-size: clamp(56px, 7.7vw, 112px); line-height: .98; letter-spacing: -.04em; }
+.problem__row { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: 64px; align-items: end; margin-top: 64px; }
+.problem__big { font: 750 clamp(30px, 3.4vw, 48px)/1.1 var(--display); letter-spacing: -.03em; }
+.problem__rest { color: var(--ink-2); font-size: 19px; line-height: 1.5; max-width: 48ch; }
+.nb { white-space: nowrap; }
+.cellmark { display: inline-block; position: relative; width: 72px; height: 28px; margin-left: 8px; vertical-align: -.04em; border: 2px solid var(--ink); border-radius: 2px; background-color: var(--paper-3); }
+.cellmark__lit { position: absolute; inset: 0 0 0 auto; width: 73%; background-color: var(--honey); border-left: 2px solid var(--ink); }
+
+/* ---------- Calendar maths: a ruler you can read */
+.maths { padding-block: 120px; }
+.maths__head { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 64px; align-items: end; }
+.maths__head h2 { font-size: clamp(44px, 5.6vw, 80px); }
+.maths__head p { color: var(--on-night-2); font-size: 19px; line-height: 1.5; max-width: 44ch; }
+
+.ruler { margin-top: 56px; }
+.ruler--year { margin-top: 32px; }
+.ruler__bars { display: grid; grid-template-columns: repeat(30, 1fr) .4375fr; gap: 3px; height: 96px; }
+.ruler__bars i { display: block; background-color: var(--night-3); border-radius: 2px; }
+.ruler__bars i.sliver { background-color: var(--honey); }
+/* 365 bars are a picture, so this is one element: a repeating bar and gap, with the quarter day laid over the end. */
+.ruler__bars--year { --u: calc((100% - 365px) / 365.25); display: block; height: 40px; background: linear-gradient(var(--honey) 0 0) right / calc(.25 * var(--u)) 100% no-repeat, repeating-linear-gradient(to right, var(--night-3) 0 var(--u), transparent var(--u) calc(var(--u) + 1px)); }
+.ruler__cap { display: flex; justify-content: space-between; gap: 24px; margin-top: 8px; color: var(--on-night-2); font-size: 15px; }
+.ruler__sliver { color: var(--honey); text-align: right; }
+
+.maths__foot { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 64px; align-items: start; margin-top: 64px; }
+.maths__note { color: var(--on-night-2); font-size: 17px; max-width: 40ch; }
+.sums { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: clamp(18px, 1.5vw, 22px); }
+.sums th, .sums td { padding: 12px 0; border-top: 1px solid var(--hair); font-weight: 400; }
+.sums tr:first-child th, .sums tr:first-child td { border-top: 0; }
+.sums th { text-align: left; color: var(--on-night-2); padding-right: 24px; }
+.sums td { text-align: right; white-space: nowrap; }
+.sums__live th { color: var(--on-night); }
+.sums__live td { color: var(--honey); }
+
+/* ---------- Who it is for: two fields that do not match */
+.who { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+.who__a { background-color: var(--honey); color: var(--ink); padding: 96px 40px 64px var(--edge); min-height: 540px; display: flex; flex-direction: column; justify-content: flex-end; --focus: var(--ink); }
+.who__a h2 { font-size: clamp(48px, 6vw, 88px); max-width: 11ch; }
+.who__a p { margin-top: 24px; font-size: 21px; line-height: 1.4; max-width: 34ch; }
+.who__b { position: relative; background-color: var(--night-2); color: var(--on-night); padding: 64px var(--edge) 64px 88px; display: flex; flex-direction: column; justify-content: flex-start; }
+.who__b h2 { font-size: clamp(36px, 3.8vw, 56px); max-width: 10ch; }
+.who__b p { margin-top: 16px; color: var(--on-night-2); font-size: 19px; line-height: 1.45; max-width: 30ch; }
+.who__wire { position: absolute; left: 40px; top: 0; bottom: 0; width: 2px; background-color: var(--wire); }
+.who__wire i { position: absolute; left: -5px; width: 12px; height: 12px; border-radius: 2px; background-color: var(--on-night-2); }
+.who__wire i:nth-child(1) { top: 72px; }
+.who__wire i:nth-child(2) { top: 45%; }
+.who__wire i:nth-child(3) { bottom: 72px; background-color: var(--honey); }
+
+/* ---------- Narrower screens */
+@media (width < 1100px) {
+  .band { grid-template-columns: minmax(0, 1fr); row-gap: 40px; }
+  .chain { max-width: 560px; }
+  .plot { --gut: 36px; }
+}
+
+@media (width < 800px) {
+  .problem { padding-block: 80px; }
+  .problem__row, .maths__head, .maths__foot { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .problem__row { margin-top: 40px; }
+  .maths { padding-block: 80px; }
+  .who { grid-template-columns: minmax(0, 1fr); }
+  .who__a { min-height: 0; padding-block: 72px 48px; }
+  .who__b { padding-block: 56px 72px; min-height: 340px; }
+}
+
+/* Phone is its own composition: sentence, thumb-sized number, the month at full width */
+@media (width < 600px) {
+  .tool { padding-block: 0 48px; }
+  .say { font-size: clamp(40px, 11.9vw, 52px); line-height: 1.08; margin-top: 4px; }
+  .say__line { display: inline; }
+  .say__line--out::before { content: ' '; }
+  .say__input { height: 1.2em; line-height: 1.2; }
+  .targets { flex-direction: column; align-items: stretch; margin-top: 8px; }
+  .presets { display: block; }
+  .presets__legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .presets__row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; margin-inline: -4px; }
+  .preset { min-height: 48px; padding: 0; font-size: 15px; }
+  .preset::after { left: 12px; right: 12px; bottom: 6px; }
+  .targets__hint { margin-left: 0; font-size: 15px; }
+  .band { margin-top: 16px; row-gap: 32px; }
+  .plot { --gut: 0px; --ch: 9px; }
+  .month__cap { font-size: 15px; }
+  .cap-long { display: none; }
+  .plot__days { display: none; }
+  .lead { min-height: 52px; }
+  .lead__label { font-size: 15px; }
+  .chain { max-width: none; }
+  .row { min-height: 56px; grid-template-columns: 24px minmax(0, 1fr) 100px; }
+  .row__name, .row__pct { min-height: 48px; font-size: 17px; }
+  .sum__verdict { min-height: 88px; }
+  .figs tbody { display: block; padding-top: 0; border-top: 0; }
+  .figs tr { flex-direction: row; align-items: baseline; justify-content: space-between; padding-block: 8px; border-top: 1px solid var(--hair); }
+  .figs th { font-size: 16px; }
+  .figs td { font-size: 18px; line-height: 28px; }
+  .problem__head { font-size: clamp(52px, 15vw, 84px); }
+  .ruler__bars { height: 72px; gap: 2px; }
+  .ruler--year { display: none; }
+  .ruler__cap { flex-direction: column; gap: 0; }
+  .ruler__sliver { text-align: left; }
+  .sums { font-size: 16px; }
+  .sums th { padding-right: 12px; }
+}
+
+/* The narrowest phones: keep the shared header on one line */
+@media (width < 360px) {
+  .ph-bar { gap: 8px; }
+  .ph-brand { font-size: 15px; }
+  .ph-nav .ph-btn { padding: 0 10px; font-size: 14px; white-space: nowrap; }
+}
+
+/* Browsers without round(): cells may land on fractions of a pixel, and the canvas follows them. */
+@supports not (width: round(down, 1px, 1px)) {
+  .plot { --cw: max(4px, (100cqw + var(--g)) / 24 - var(--g)); }
+  .lead { --x: calc(var(--gw) - min(var(--cw), max(var(--hf) * var(--cw), 2px)) / 2 - 1px); }
+}
+
+/* Off-screen section heights, measured as content boxes, so the scrollbar holds still while they render. */
+.problem.below { contain-intrinsic-block-size: auto 424px; }
+.maths.below { contain-intrinsic-block-size: auto 805px; }
+.who.below { contain-intrinsic-block-size: auto 540px; }
+@media (width < 760px) {
+  .problem.below { contain-intrinsic-block-size: auto 662px; }
+  .maths.below { contain-intrinsic-block-size: auto 891px; }
+  .who.below { contain-intrinsic-block-size: auto 670px; }
+}
