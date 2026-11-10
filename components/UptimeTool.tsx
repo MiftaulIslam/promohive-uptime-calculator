@@ -52,9 +52,10 @@ export default function UptimeTool() {
   return (
     <form className="tool" noValidate onSubmit={(e) => e.preventDefault()}>
       <div className="wrap">
-        <p className="tool__name">Uptime Budget Calculator</p>
+        <h1 className="tool__name">Uptime Budget Calculator</h1>
+        <p className="tool__intro">A free calculator for founders and engineers agreeing an SLA. It turns an uptime target into the downtime it allows and checks whether your chain of services can meet it. No sign-up, and it runs in your browser.</p>
 
-        <h1 className={ok ? 'say' : 'say is-void'}>
+        <p className={ok ? 'say' : 'say is-void'}>
           <span className="say__line">
             <label className="sr-only" htmlFor="u-target">Availability target (%)</label>
             <span className="say__field">
@@ -65,7 +66,7 @@ export default function UptimeTool() {
           </span>
           {' '}
           <span className="say__line say__line--out"><output className="say__out" ref={monthRef} htmlFor="u-target" aria-live="off">{SAMPLE_MONTH}</output><span className="say__rest"> of downtime a month</span></span>
-        </h1>
+        </p>
 
         <div className="targets">
           <fieldset className="presets">
