@@ -7,10 +7,11 @@ body { font-variant-numeric: normal; }
 
 /* ---------- The tool: first screen */
 .tool { padding-block: 4px 56px; }
-.tool__name { color: var(--on-night-2); font-size: 16px; line-height: 24px; }
+.tool__name { color: var(--on-night-2); font: 400 16px/24px var(--body); letter-spacing: 0; }
+.tool__intro { max-width: 72ch; color: var(--on-night-3); font-size: 16px; line-height: 24px; }
 
 /* The headline is the result */
-.say { margin-top: 4px; font-size: clamp(44px, 6.4vw, 92px); line-height: 1.04; letter-spacing: -.035em; text-wrap: initial; font-variant-numeric: tabular-nums; }
+.say { margin-top: 12px; font-family: var(--display); font-weight: 750; font-size: clamp(44px, 6.4vw, 92px); line-height: 1.04; letter-spacing: -.035em; text-wrap: initial; font-variant-numeric: tabular-nums; }
 .say__line { display: block; position: relative; }
 /* The input and a hidden copy of its text share one grid cell, so the field is exactly as wide as what is typed, with no JS. */
 .say__field { display: inline-grid; }
